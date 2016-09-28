@@ -28,7 +28,7 @@ import argparse
 
 def parseArgs():
 	"""Parse the Arguments"""
-	parser = argparse.ArgumentParser(description='Handles service restart', epilog="Event handler script for restarting a nagios service on the target machine")
+	parser = argparse.ArgumentParser(prog="restart_service.py", description='Handles service restart', epilog="Event handler script for restarting a nagios service on the target machine")
 	parser.add_argument('status', choices=['OK','WARNING','PENDING','UNKNOWN','CRITICAL'], help='the service status')
 	parser.add_argument('state', choices=['SOFT', 'HARD'], help='the service state')
 	parser.add_argument('check_count', type=int, help='the service state count')
@@ -37,8 +37,12 @@ def parseArgs():
 	parser.add_argument('service_name', help='the service to restart')
 	parser.add_argument('-E', '--threshold', dest='threshold', default=3, required=False, help='the threshold at which to take action')
 	group_action = parser.add_mutually_exclusive_group()
-	group_action.add_argument('-C', '--crit-happens', default=True, action='store_true', dest='crit_happens', help='crit happens - allow hard critical state before taking action, overrides other preferances')
-	group_action.add_argument('-D', '--crit-is-down', action='store_false', dest='crit_happens', help='crit avoidence - never wait for critical state before taking action, overrides other preferances')
+	group_action.add_argument('-C', '--crit-happens', default=True, action='store_true', dest='crit_happens', help='crit happens - allow hard critical state before taking action, overrides other preferences')
+	group_action.add_argument('-D', '--crit-is-down', action='store_false', dest='crit_happens', help='crit avoidence - never wait for critical state before taking action, overrides other preferences')
+	remote_action = parser.add_mutually_exclusive_group()
+	remote_action.add_argument('--use-nrpe', default=True, action='store_true', dest='use_nrpe', help='use NRPE plugin - for remote hosts comunicate over NRPE, overrides other preferences. This is default.')
+	remote_action.add_argument('--use-ssh', action='store_false', dest='use_nrpe', help='use SSH - for remote hosts communicate over SSH, overrides other preferences')
+	parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.9.1')
 	return parser.parse_args()
 
 
@@ -127,6 +131,7 @@ if __name__ == '__main__':
 	host_name = (args.host_name)
 	service_cmd = (args.service_cmd)
 	service_name = (args.service_name)
+	use_nrpe = (args.use_nrpe)
 
 	crit_happens = (args.crit_happens is True)
 
@@ -139,8 +144,12 @@ if __name__ == '__main__':
 			timestamp = getTimeStamp()
 			print(str(timestamp+" - Restarting service "+str(service_name)+" (" + str(state) + " critical state "+str(count)+"/"+str(action_threshold)+")...\n"))
 			if "localhost" not in (host_name).lower():
-				# Call NRPE to restart the service on the remote machine
-				print( doErrorHandle("/usr/lib/nagios/plugins/check_nrpe -H "+str(host)+" -c "+str(service_cmd) ) )
+				if (use_nrpe is True):
+					# Call NRPE to restart the service on the remote machine
+					print( doErrorHandle("/usr/lib/nagios/plugins/check_nrpe -H "+str(host)+" -c "+str(service_cmd) ) )
+				else:
+					# Call SSH to restart the service on the remote machine
+					print( doErrorHandle("/usr/bin/ssh -2 "+str(host)+" -c "+str(service_cmd) ) )
 			else:
 				print( doErrorHandle( str(service_cmd) ) )
 			print(str(timestamp+"OK - Service "+str(service_name)+" restarted on host "+str(host_name)+"."))
