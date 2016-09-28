@@ -45,10 +45,10 @@ class BasicTestSuite(unittest.TestCase):
 			theResult = False
 			try:
 				theOutputtext = subprocess.check_output(["which", "ssh"])
+				if ("/ssh" in theOutputtext):
+					theResult = True
 			except Exception:
 				theResult = False
-			if ("/ssh" in theOutputtext):
-				theResult = True
 		assert theResult
 
 if __name__ == '__main__':

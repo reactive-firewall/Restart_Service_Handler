@@ -42,7 +42,7 @@ def parseArgs():
 	remote_action = parser.add_mutually_exclusive_group()
 	remote_action.add_argument('--use-nrpe', default=True, action='store_true', dest='use_nrpe', help='use NRPE plugin - for remote hosts comunicate over NRPE, overrides other preferences. This is default.')
 	remote_action.add_argument('--use-ssh', action='store_false', dest='use_nrpe', help='use SSH - for remote hosts communicate over SSH, overrides other preferences')
-	parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.9.1')
+	parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.9.2')
 	return parser.parse_args()
 
 
