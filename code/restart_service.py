@@ -42,7 +42,7 @@ def parseArgs():
 	remote_action = parser.add_mutually_exclusive_group()
 	remote_action.add_argument('--use-nrpe', default=True, action='store_true', dest='use_nrpe', help='use NRPE plugin - for remote hosts comunicate over NRPE, overrides other preferences. This is default.')
 	remote_action.add_argument('--use-ssh', action='store_false', dest='use_nrpe', help='use SSH - for remote hosts communicate over SSH, overrides other preferences')
-	parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.9.2')
+	parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.9.3')
 	return parser.parse_args()
 
 
@@ -71,7 +71,7 @@ def crit_handler(state_mode="SOFT", count_num=1):
 		return (crit_happens is False)
 
 def unknown_handler(state_mode="SOFT", count_num=1):
-    print True
+    return True
 
 def pending_handler(state_mode="SOFT", count_num=1):
 	if state_options[state_mode]:

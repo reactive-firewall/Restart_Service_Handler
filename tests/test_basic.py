@@ -26,7 +26,7 @@ class BasicTestSuite(unittest.TestCase):
 		try:
 			import subprocess
 			theOutputtext = subprocess.check_output(["which", "which"])
-			if ("/which" in theOutputtext):
+			if (str("/which") in theOutputtext):
 				theResult = True
 		except Exception:
 			theResult = False
@@ -38,13 +38,13 @@ class BasicTestSuite(unittest.TestCase):
 		try:
 			import subprocess
 			theOutputtext = subprocess.check_output(["which", "check_nrpe"])
-			if ("/check_nrpe" in theOutputtext):
+			if (str("/check_nrpe") in theOutputtext):
 				theResult = True
 		except Exception:
 			theResult = False
 			try:
 				theOutputtext = subprocess.check_output(["which", "ssh"])
-				if ("/ssh" in theOutputtext):
+				if (str("/ssh") in theOutputtext):
 					theResult = True
 			except Exception:
 				theResult = False
