@@ -10,7 +10,7 @@ Syntax:
 -------
 
 ```bash
-restart_service.py [-h] [-E THRESHOLD] [-C | -D] {OK,WARNING,PENDING,UNKNOWN,CRITICAL} {SOFT,HARD} check_count host_name service_cmd service_name
+restart_service.py [-h] [-E THRESHOLD] [-C | -D] [--use-nrpe | --use-ssh] [-V] {OK,WARNING,PENDING,UNKNOWN,CRITICAL} {SOFT,HARD} check_count host_name service_cmd service_name
 ```
 
 positional arguments:
@@ -27,9 +27,14 @@ optional arguments:
   -E THRESHOLD, --threshold THRESHOLD
                         the threshold at which to take action
   -C, --crit-happens    crit happens - allow hard critical state before taking
-                        action, overrides other preferances
+                        action, overrides other preferences
   -D, --crit-is-down    crit avoidence - never wait for critical state before
-                        taking action, overrides other preferances
+                        taking action, overrides other preferences
+  --use-nrpe            use NRPE plugin - for remote hosts comunicate over
+                        NRPE, overrides other preferences. This is default.
+  --use-ssh             use SSH - for remote hosts communicate over SSH,
+                        overrides other preferences
+  -V, --version         show program's version number and exit
 
 That's it!
 
