@@ -26,8 +26,11 @@ class BasicTestSuite(unittest.TestCase):
 		try:
 			import subprocess
 			theOutputtext = subprocess.check_output(["which", "which"])
-			if (str("/which") in theOutputtext):
-				theResult = True
+			try:
+				if (str("/which") in theOutputtext):
+					theResult = True
+			except Exception as err:
+				print(err.msg)
 		except Exception:
 			theResult = False
 		assert theResult
