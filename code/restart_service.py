@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import argparse
 
 def parseArgs():
-	"""Parse the Arguments"""
+	"""Parse the Arguments."""
 	parser = argparse.ArgumentParser(prog="restart_service.py", description='Handles service restart', epilog="Event handler script for restarting a nagios service on the target machine")
 	parser.add_argument('status', choices=['OK','WARNING','PENDING','UNKNOWN','CRITICAL'], help='the service status')
 	parser.add_argument('state', choices=['SOFT', 'HARD'], help='the service state')
@@ -42,16 +42,17 @@ def parseArgs():
 	remote_action = parser.add_mutually_exclusive_group()
 	remote_action.add_argument('--use-nrpe', default=True, action='store_true', dest='use_nrpe', help='use NRPE plugin - for remote hosts comunicate over NRPE, overrides other preferences. This is default.')
 	remote_action.add_argument('--use-ssh', action='store_false', dest='use_nrpe', help='use SSH - for remote hosts communicate over SSH, overrides other preferences')
-	parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.9.5')
+	parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.9.6')
 	return parser.parse_args()
 
 
 # define the function blocks
 def ok_handler(state_mode="SOFT", count_num=1):
-	# nothing to do when it is all ok
+	"""Handler for when OK. Usualy nothing to do when it is all OK."""
 	return False
 
 def warn_handler(state_mode="SOFT", count_num=1):
+	"""Handler for Warning state."""
 	if state_options[state_mode]:
 		if count_num >= action_threshold:
 			return (crit_happens is False)
@@ -61,6 +62,7 @@ def warn_handler(state_mode="SOFT", count_num=1):
 		return False
 
 def crit_handler(state_mode="SOFT", count_num=1):
+	"""Handler for Critical state."""
 	if state_options[state_mode]:
 		if int(count_num) is int(action_threshold):
 			return True
@@ -71,16 +73,18 @@ def crit_handler(state_mode="SOFT", count_num=1):
 		return (crit_happens is False)
 
 def unknown_handler(state_mode="SOFT", count_num=1):
-    return True
+	"""Handler for Warning state."""
+	return True
 
 def pending_handler(state_mode="SOFT", count_num=1):
+	"""Handler for Pending state."""
 	if state_options[state_mode]:
 		if count_num >= action_threshold:
 			return (crit_happens is False)
-	else:
-		return False
+	return False
 
 def getTimeStamp():
+	"""Returns the time stamp."""
 	theDate=None
 	try:
 		import time
@@ -90,6 +94,7 @@ def getTimeStamp():
 	return str(theDate)
 
 def doErrorHandle(theInputStr):
+	"""Handler for Error state."""
 	try:
 		import os
 		import subprocess
@@ -143,7 +148,7 @@ if __name__ == '__main__':
 		# fix it
 			timestamp = getTimeStamp()
 			print(str(timestamp+" - Restarting service "+str(service_name)+" (" + str(state) + " critical state "+str(count)+"/"+str(action_threshold)+")...\n"))
-			if "localhost" not in (host_name).lower():
+			if "localhost" not in str(host_name).lower():
 				if (use_nrpe is True):
 					# Call NRPE to restart the service on the remote machine
 					print( doErrorHandle("/usr/lib/nagios/plugins/check_nrpe -H "+str(host)+" -c "+str(service_cmd) ) )
