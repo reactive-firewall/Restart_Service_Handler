@@ -47,7 +47,7 @@ def parseArgs():
 	ssh_action.add_argument('--ssh-user', dest='ssh_user', default='nagios', help='SSH USER- for remote hosts communicate over SSH')
 	ssh_action.add_argument('--ssh-password', dest='ssh_password', default='nagios', help='SSH PASSWORD- for remote hosts communicate over SSH. UNSAFE IN PROD.')
 	ssh_action.add_argument('--ssh-key', dest='ssh_id', default='~/.id_rsa_4692', help='SSH Idenity Key- for remote hosts communicate over SSH')
-	parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.9.9')
+	parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.9.10')
 	return parser.parse_args()
 
 
