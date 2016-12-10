@@ -42,16 +42,21 @@ def parseArgs():
 	remote_action = parser.add_mutually_exclusive_group()
 	remote_action.add_argument('--use-nrpe', default=True, action='store_true', dest='use_nrpe', help='use NRPE plugin - for remote hosts comunicate over NRPE, overrides other preferences. This is default.')
 	remote_action.add_argument('--use-ssh', action='store_false', dest='use_nrpe', help='use SSH - for remote hosts communicate over SSH, overrides other preferences')
-	parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.9.6')
+	remote_action.add_argument('--use-local', action='store_true', dest='use_local', default=False, help='use local - for remote hosts communicate to this command, overrides other preferences. Useful for hardcoding.')
+	ssh_action = remote_action.add_argument_group()
+	ssh_action.add_argument('--ssh-user', dest='ssh_user', default='nagios', help='SSH USER- for remote hosts communicate over SSH')
+	ssh_action.add_argument('--ssh-password', dest='ssh_password', default='nagios', help='SSH PASSWORD- for remote hosts communicate over SSH. UNSAFE IN PROD.')
+	ssh_action.add_argument('--ssh-key', dest='ssh_id', default='~/.id_rsa_4692', help='SSH Idenity Key- for remote hosts communicate over SSH')
+	parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.9.8')
 	return parser.parse_args()
 
 
 # define the function blocks
-def ok_handler(state_mode="SOFT", count_num=1):
+def ok_handler(state_mode="SOFT", count_num=1, action_threshold=3, crit_happens=True):
 	"""Handler for when OK. Usualy nothing to do when it is all OK."""
 	return False
 
-def warn_handler(state_mode="SOFT", count_num=1):
+def warn_handler(state_mode="SOFT", count_num=1, action_threshold=3, crit_happens=True):
 	"""Handler for Warning state."""
 	if state_options[state_mode]:
 		if count_num >= action_threshold:
@@ -61,10 +66,10 @@ def warn_handler(state_mode="SOFT", count_num=1):
 	else:
 		return False
 
-def crit_handler(state_mode="SOFT", count_num=1):
+def crit_handler(state_mode="SOFT", count_num=1, action_threshold=3, crit_happens=True):
 	"""Handler for Critical state."""
 	if state_options[state_mode]:
-		if int(count_num) is int(action_threshold):
+		if count_num == action_threshold:
 			return True
 		else:
 			# no need to be obsesive, call for user on HARD Fail
@@ -72,11 +77,11 @@ def crit_handler(state_mode="SOFT", count_num=1):
 	else:
 		return (crit_happens is False)
 
-def unknown_handler(state_mode="SOFT", count_num=1):
+def unknown_handler(state_mode="SOFT", count_num=1, action_threshold=3, crit_happens=True):
 	"""Handler for Warning state."""
 	return True
 
-def pending_handler(state_mode="SOFT", count_num=1):
+def pending_handler(state_mode="SOFT", count_num=1, action_threshold=3, crit_happens=True):
 	"""Handler for Pending state."""
 	if state_options[state_mode]:
 		if count_num >= action_threshold:
@@ -88,7 +93,7 @@ def getTimeStamp():
 	theDate=None
 	try:
 		import time
-		theDate = time.strftime("%a %b %d %H:%M:%S PDT %Y", time.localtime())
+		theDate = time.strftime("%a %b %d %H:%M:%S %Z %Y", time.localtime())
 	except Exception:
 		theDate=str("")
 	return str(theDate)
@@ -99,7 +104,7 @@ def doErrorHandle(theInputStr):
 		import os
 		import subprocess
 		try:
-			theResult=subprocess.check_output(theInputStr.split(' '))
+			theResult=subprocess.check_output(str(theInputStr).split(' '))
 		except Exception:
 			timestamp = getTimeStamp()
 			theResult = str(timestamp+" - WARNING - An error occured while handling the failure. Cascading failure.")
@@ -128,27 +133,37 @@ state_options = {"SOFT" : False,
 #	4 : error_handler
 #}
 
-if __name__ == '__main__':
+def main():
 	args = parseArgs()
-	status = (args.status).upper()
-	state = (args.state).upper()
-	count = int(args.check_count)
+	status = str(args.status).upper()
+	state = str(args.state).upper()
+	action_threshold=None
+	try:
+		count = int(str(args.check_count), 10)
+	except Exception as cerr:
+		print(str(cerr))
+		print(str(cerr.args))
+		print(str(" UNKNOWN - An error occured while handling the arguments. Command failure."))
+		exit(3)
 	host_name = (args.host_name)
 	service_cmd = (args.service_cmd)
 	service_name = (args.service_name)
 	use_nrpe = (args.use_nrpe)
+	use_local = (args.use_local)
 
 	crit_happens = (args.crit_happens is True)
-
-	action_threshold=args.threshold
+	try:
+		action_threshold=int(str(args.threshold), 10)
+	except Exception as cerr:
+		action_threshold=4
 	if action_threshold is None:
 		action_threshold = 4
 	try:
-		if status_options[status](state, count):
+		if status_options[status](state, count, action_threshold, crit_happens):
 		# fix it
 			timestamp = getTimeStamp()
 			print(str(timestamp+" - Restarting service "+str(service_name)+" (" + str(state) + " critical state "+str(count)+"/"+str(action_threshold)+")...\n"))
-			if "localhost" not in str(host_name).lower():
+			if ("localhost" not in str(host_name).lower()) and (use_local is False):
 				if (use_nrpe is True):
 					# Call NRPE to restart the service on the remote machine
 					print( doErrorHandle("/usr/lib/nagios/plugins/check_nrpe -H "+str(host)+" -c "+str(service_cmd) ) )
@@ -157,11 +172,14 @@ if __name__ == '__main__':
 					print( doErrorHandle("/usr/bin/ssh -2 "+str(host)+" -c "+str(service_cmd) ) )
 			else:
 				print( doErrorHandle( str(service_cmd) ) )
-			print(str(timestamp+"OK - Service "+str(service_name)+" restarted on host "+str(host_name)+"."))
+			print(str(timestamp+" OK - Service "+str(service_name)+" restarted on host "+str(host_name)+"."))
 #		else
-#			print(str(timestamp+"OK - Service "+str(service_name)+" NOT restarted on host "+str(host_name)+"."))
+#			print(str(timestamp+" OK - Service "+str(service_name)+" NOT restarted on host "+str(host_name)+"."))
 	except Exception:
-		print(str("UNKNOWN - An error occured while handling the failure. Cascading failure."))
+		print(str(" UNKNOWN - An error occured while handling the failure. Cascading failure."))
 		exit(3)
 	exit(0)
 
+
+if __name__ == '__main__':
+	main()
