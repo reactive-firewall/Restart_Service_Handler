@@ -43,7 +43,7 @@ install: /usr/local/bin/ /var/lib/restart_service_handler/ must_be_root
 	$(QUITE)$(INSTALL) $(INST_OWN) $(INST_OPTS) ./code/restart_service.py /var/lib/restart_service_handler/restart_service.py
 	$(QUITE)$(LINK) /var/lib/restart_service_handler/restart_service.py /usr/local/bin/restart_service.py
 	$(QUITE) $(WAIT)
-	$(QUITE)$(INSTALL) $(INST_OWN) $(INST_OPTS) ./code/__init__.py /var/lib/convert_it/__init__.py
+	$(QUITE)$(INSTALL) $(INST_OWN) $(INST_OPTS) ./code/__init__.py /var/lib/restart_service/__init__.py
 	$(QUITE) $(WAIT)
 	$(QUIET)$(ECHO) "$@: Done."
 
