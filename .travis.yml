@@ -20,17 +20,43 @@ matrix:
   - os: linux
     python:  "3.5"
   - os: linux
+    python:  "3.6"
+  - os: linux
     python:  "3.5-dev" # 3.5 development branch
+  - os: linux
+    python:  "3.6-dev" # 3.6 development branch
+  - os: linux
+    python:  "3.7-dev"
   - os: linux
     python:  "nightly" # currently points to 3.6-dev
   - os: osx
     osx_image: xcode7.2
     language: generic
+  - os: osx
+    osx_image: xcode8.3
+    language: generic
 
 before_install:
-  - if [ $TRAVIS_OS_NAME == osx ] ; then brew search python || true ; fi
-  - if [ $TRAVIS_OS_NAME == osx ] ; then brew install python2.6 python2.7 $INSTALL || true ; fi
+  - travis_retry pip install tox || pip install tox || true ;
+  - travis_retry pip install coverage || true ;
+  - travis_retry pip install codecov || true ;
+  - travis_retry python -m pip install coverage || python -m pip install coverage || true ;
+  - travis_retry python -m pip install codecov || python -m pip install codecov || true ;
+  - travis_retry python3 -m pip install tox || python3 -m pip install tox || true ;
+  - travis_retry python3 -m pip install coverage || python3 -m pip install coverage || true ;
+  - travis_retry python3 -m pip install codecov || python3 -m pip install codecov || true ;
+  - travis_retry python3 -m pip install -r requirements.txt || python3 -m pip install -r requirements.txt || true ;
 
 install: "make init"
+
 # command to run tests
-script: make test
+script:
+  - make clean ;
+  - make test ;
+  - if [ $TRAVIS_OS_NAME == osx ] ; then echo "SKIP codecov" ; else codecov || exit $? ; fi ;
+  - make clean || exit $? ;
+after_success:
+  - codecov || true
+  - if [ $TRAVIS_OS_NAME == osx ] ; then true ; wait ; else coverage run -p -m piaplib.pocket pku upgrade --upgrade-all || true ; wait ; codecov || true ; fi ; wait ;
+  - if [ $TRAVIS_OS_NAME == osx ] ; then echo "SKIP codecov" ; else codecov || exit $? ; fi ;
+

@@ -57,16 +57,24 @@ purge: clean uninstall
 	$(QUIET)$(ECHO) "$@: Done."
 
 test:
-	$(QUIET)python -m unittest tests.test_basic
+	$(QUIET)coverage erase
+	$(QUIET)coverage run -p --source=code -m unittest discover --verbose -s ./tests -t ./ || python3 -m unittest discover --verbose -s ./tests -t ./ || python -m unittest discover --verbose -s ./tests -t ./ || DO_FAIL=exit 2 ;
+	$(QUIET)coverage combine 2>/dev/null || true
+	$(QUIET)coverage report 2>/dev/null || true
+	$(QUIET)python3 -m unittest discover --verbose -t ./ || python -m unittest discover --verbose -t ./
 	$(QUIET)$(ECHO) "$@: Done."
 
 clean:
-	$(QUIET)$(MAKE) -C ./docs/ -f Makefile clean 2>/dev/null
-	$(QUIET)rm -f tests/*.pyc 2>/dev/null
-	$(QUIET)rm -f code/*.pyc 2>/dev/null
-	$(QUIET)rm -f *.pyc 2>/dev/null
-	$(QUIET)rm -f *.DS_Store 2>/dev/null
-	$(QUIET)rm -f ./*/*.DS_Store 2>/dev/null
+	$(QUIET)$(MAKE) -C ./docs/ -f Makefile clean 2>/dev/null || true
+	$(QUIET)rm -f tests/*.pyc 2>/dev/null || true
+	$(QUIET)rm -f code/*.pyc 2>/dev/null || true
+	$(QUIET)rm -f *.pyc 2>/dev/null || true
+	$(QUIET)rm -f *.DS_Store 2>/dev/null || true
+	$(QUIET)rm -f *~ 2>/dev/null || true
+	$(QUIET)rm -f ./*/*~ 2>/dev/null || true
+	$(QUIET)rm -f ./.coverage* 2>/dev/null || true
+	$(QUIET)rm -f *.DS_Store 2>/dev/null || true
+	$(QUIET)rm -f ./*/*.DS_Store 2>/dev/null || true
 	$(QUIET)$(ECHO) "$@: Done."
 
 must_be_root:

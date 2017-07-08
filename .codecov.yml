@@ -1,0 +1,18 @@
+coverage:
+  status:
+    project:
+      default: off
+      code:
+        target: 45%
+        flags: piaplib
+      tests:
+        target: 20%
+        flags: tests
+
+flags:
+  code:
+    paths:
+      - code/
+  tests:
+    paths:
+      - tests/
