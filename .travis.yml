@@ -35,6 +35,10 @@ matrix:
     language: generic
 
 before_install:
+  - if [ $TRAVIS_OS_NAME == osx ] ; then travis_wait brew upgrade || travis_retry brew upgrade || true ; fi
+  - if [ $TRAVIS_OS_NAME == osx ] ; then travis_wait brew install python3 $INSTALL || true ; fi
+  - if [ $TRAVIS_OS_NAME == osx ] ; then brew install coverage $INSTALL || true ; fi
+  - if [ $TRAVIS_OS_NAME == osx ] ; then brew install codecov $INSTALL || true ; fi
   - travis_retry pip install tox || pip install tox || true ;
   - travis_retry pip install coverage || true ;
   - travis_retry pip install codecov || true ;
@@ -50,7 +54,7 @@ install: "make init"
 # command to run tests
 script:
   - make clean ;
-  - make test ;
+  - make test
   - if [ $TRAVIS_OS_NAME == osx ] ; then echo "SKIP codecov" ; else codecov || exit $? ; fi ;
   - make clean || exit $? ;
 after_success:
